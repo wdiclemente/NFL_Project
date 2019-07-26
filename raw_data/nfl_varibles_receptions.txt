@@ -1,0 +1,15 @@
+things i need for data science project:
+Fantastic variables and where to find them:
+
+QB name/ID passes (RECEPTIONS->playID->PASSES->nflID)
+WR name/ID (RECEPTIONS->nflID)
+Receiver position (RECEPTIONS->recPosition) 
+Team name/ID (RECEPTIONS->teamId)
+Pass result -- completion, incompletion, int, etc -- (PASSES->passOutcomes)
+Pass nullified by penalty (RECEPTIONS->passNull)
+pass total yards (RECEPTIONS->recYards)
+pass distance (PASSES->passLength)
+yards after catch (RECEPTIONS->recYac)
+game year (RECEPTIONS->playId->PLAYS->gameID->GAMES->season)
+game week (pre/reg/post) (RECEPTIONS->playId->PLAYS->gameID->GAMES->weekNameAbbr)
+								could combine seasonType and week
