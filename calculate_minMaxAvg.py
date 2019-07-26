@@ -1,9 +1,9 @@
 #!/bin/python
 
 if __name__ == '__main__':
-    from pass_play import PassPlay
-    from stat_minMaxAvg import StatMinMaxAvg
-    from utils import *
+    from python.pass_play import PassPlay
+    from python.stat_minMaxAvg import StatMinMaxAvg
+    from python.utils import *
     import numpy as np
     from matplotlib import pyplot as plt
     
