@@ -1,30 +1,35 @@
 class StatMinMaxAvg:
 
-    stat_name   = ""
-    num_entries = 0
-    total       = 0
-    min_value   = 9999
-    max_value   = -9999
-    average     = 0.
-    values      = [] # I may get rid of this for memory reasons if it's never used
+    #stat_name   = ""
+    #num_entries = 0
+    #total       = 0
+    #min_value   = 9999
+    #max_value   = -9999
+    #average     = 0.
+    #values      = [] # I may get rid of this for memory reasons if it's never used
 
     def __init__(self, name):
         self.stat_name = name
-
+        self.num_entries = 0
+        self.total       = 0
+        self.min_value   = 9999
+        self.max_value   = -9999
+        self.average     = 0.
+        self.values      = []
     # allow overwrite of name
     def set_stat_name(self,name):
         self.stat_name = name
     
     # add a new entry to the stat tracker
     def add_entry(self,value):
-        self.values.append(value)
+        #self.values.append(value)
         self.num_entries += 1
         self.total += value
         
         # update calculated values
         if value < self.min_value:
             self.min_value = value
-        elif value > self.max_value:
+        if value > self.max_value:
             self.max_value = value
 
         if not self.num_entries == 0: # this should never happen, but you never know

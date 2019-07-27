@@ -4,4 +4,8 @@
 **/*~
 **/*.pyc
 
+**/*backup
+
 plot_test.py*
+*.log
+play_test.py*
