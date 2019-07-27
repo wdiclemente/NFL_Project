@@ -104,11 +104,11 @@ if __name__ == '__main__':
         season_stats[year] = [stat_receptions,stat_recTotYards,stat_recYac,stat_recPassYards]
 
         # print stat trackers
-        print "  Stats for season {}  --------------------------------------------------------------".format(year)
-        print stat_receptions  .to_string()
-        print stat_recTotYards .to_string()
-        print stat_recYac      .to_string()
-        print stat_recPassYards.to_string()
+        #print "  Stats for season {}  --------------------------------------------------------------".format(year)
+        #print stat_receptions  .to_string()
+        #print stat_recTotYards .to_string()
+        #print stat_recYac      .to_string()
+        #print stat_recPassYards.to_string()
 
         # write stats to file
         output_stats.write('[{} season]\n'.format(year))
@@ -125,6 +125,57 @@ if __name__ == '__main__':
     # Make some plots!
     #---------------------------
     
+    years = range(2004,2019)
+    player_id = "2506106"
+
+    # set up player stats
+    player_receptions  = []
+    player_recTotalYds = []
+    player_recYac      = []
+    player_recPassYds  = []
+    # set up nfl stats
+    nfl_receptions  = []
+    nfl_recTotalYds = []
+    nfl_recYac      = []
+    nfl_recPassYds  = []
+    
+    # fill lists by looping over year
+    for y,year in enumerate(years):
+        nfl_receptions .append(season_stats[year][0])
+        nfl_recTotalYds.append(season_stats[year][1])
+        nfl_recYac     .append(season_stats[year][2])
+        nfl_recPassYds .append(season_stats[year][3])
+
+        if not player_id in seasons[y]:
+            player_receptions .append(np.NaN)
+            player_recTotalYds.append(np.NaN)
+            player_recYac     .append(np.NaN)
+            player_recPassYds .append(np.NaN)
+
+        else:
+            p_receptions  = 0
+            p_recTotalYds = 0
+            p_recYac      = 0
+            p_recPassYds  = 0
+            
+            player_season = seasons[y][player_id]
+            for play in player_season:
+                p_receptions += 1
+                p_recTotalYds = play.get_play_yards()
+                p_recYac      = play.get_pass_yac()
+                p_recPassYds  = play.get_pass_yards()
+            
+            player_receptions .append(p_receptions)
+            player_recTotalYds.append(p_recTotalYds)
+            player_recYac     .append(p_recYac)
+            player_recPassYds .append(p_recPassYds)
+    
+    make_plot_with_ratio(years, 
+                         player_receptions, 
+                         nfl_receptions, 
+                         ["Receptions",lookup_id_to_player[player_id],"(min {} rec)".format(min_rec)])
+
+    exit()
     # total receiving yards as proof of concept
     #   plot relative to NFL average? maybe flatter and easier to get meaningful info
     years = range(2004,2019)
