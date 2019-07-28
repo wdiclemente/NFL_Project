@@ -1,5 +1,18 @@
 from pass_play import *
 from matplotlib import pyplot as plt
+import numpy as np
+
+def parse_PoI(config):
+    config = config.strip()
+    config = config.split(',')
+    PoI = []
+    for pid in config:
+        try:
+            PoI.append(int(pid))
+        except ValueError:
+            print "Player ID '{}' from config is not an int! Exiting. . .".format(pid)
+            exit()
+    return PoI
 
 def make_pass_play(ID,line):
     output = PassPlay(ID)
@@ -53,7 +66,7 @@ def divide_lists(numerator, denominator):
     output = []
     for i in range(len(numerator)):
         if denominator[i] == 0:
-            output.append(np.NaN)
+            output.append(0.0)
         else:
             output.append(numerator[i]/float(denominator[i]))
     return output
@@ -69,7 +82,7 @@ def divide_lists(numerator, denominator):
 #   plot_text -- plot-specific text formatted as follows:
 #                [ stat, player name, legend text ]
 #-----------------------------------------------------------------------
-def make_plot_with_ratio(years, player_stats, season_stats, plot_text):
+def make_plot_with_ratio(player_id, stat_id, player_years, player_stats, season_stats, plot_text):
     # set up canvas
     figure = plt.figure(figsize=(12,7))
     grid   = plt.GridSpec(8,1,hspace=0)
@@ -78,13 +91,23 @@ def make_plot_with_ratio(years, player_stats, season_stats, plot_text):
     main_plot  = figure.add_subplot(grid[:6,:],xticklabels=[])
     ratio_plot = figure.add_subplot(grid[6:,:])
 
-    # process the data
+    # clean player stats -- we need to fill in missing years
+    stat_name = season_stats[0].get_stat_name()
+    years = range(2004,2019)
+    new_player_stats = []
+    for year in years:
+        if year not in player_years:
+            new_player_stats.append(np.NaN)
+        else:
+            new_player_stats.append(player_stats[player_years.index(year)])
+
+    # get league stats
     average = [s.get_average()   for s in season_stats]
     minimum = [s.get_min_value() for s in season_stats]
     maximum = [s.get_max_value() for s in season_stats]
 
     # get ratio stats
-    r_player_stats = divide_lists(player_stats,average)
+    r_new_player_stats = divide_lists(new_player_stats,average)
     r_average = divide_lists(average,  average)
     r_minimum = divide_lists(minimum,average)
     r_maximum = divide_lists(maximum,average)        
@@ -93,27 +116,38 @@ def make_plot_with_ratio(years, player_stats, season_stats, plot_text):
     # MAIN PLOT
     #--------------
     # player of interest's stats
-    main_plot.plot(years,player_stats, color='#000000', linestyle='-', linewidth=1.5, label=plot_text[1])
+    main_plot.plot(years,new_player_stats, color='#000000', linestyle='-', linewidth=1.5, label=plot_text[0])
     # nfl average
-    main_plot.plot(years,average, color='#000099', linestyle=':', linewidth=1, label="NFL average {}".format(plot_text[2]))
+    main_plot.plot(years,average, color='#000099', linestyle=':', linewidth=1, label="NFL average")
     # nfl min/max and fill the area in between
-    main_plot.plot(years,minimum, color='#444444', linestyle='-', linewidth=1, label="Low-high range {}".format(plot_text[2]))
-    main_plot.plot(years,maximum, color='#444444', linestyle='-', linewidth=1, label="_noLabel")
-    main_plot.fill_between(years,minimum,maximum,color='#EEEEEE', label="Minimum-maximum range")
+    main_plot.plot(years,minimum, color='#2222CC', linestyle='-', linewidth=1, label="Low-high range")
+    main_plot.plot(years,maximum, color='#2222CC', linestyle='-', linewidth=1, label="_noLabel")
+    main_plot.fill_between(years,minimum,maximum,color='#EEEEFF', label="Minimum-maximum range")
 
     #--------------
     # RATIO PLOT
     #--------------
     # player of interest's stats
-    ratio_plot.plot(years,r_player_stats, color='#000000', linestyle='-', linewidth=1.5, label=plot_text[1])
+    ratio_plot.plot(years,r_new_player_stats, color='#000000', linestyle='-', linewidth=1.5)
     # nfl average
-    ratio_plot.plot(years,r_average, color='#000099', linestyle=':', linewidth=1, label="NFL average {}".format(plot_text[2]))
+    ratio_plot.plot(years,r_average, color='#000099', linestyle=':', linewidth=1)
     # nfl min/max and fill the area in between
-    ratio_plot.plot(years,r_minimum, color='#444444', linestyle='-', linewidth=1, label="Low-high range {}".format(plot_text[2]))
-    ratio_plot.plot(years,r_maximum, color='#444444', linestyle='-', linewidth=1, label="_noLabel")
-    ratio_plot.fill_between(years,r_minimum,r_maximum,color='#EEEEEE', label="Minimum-maximum range")
+    ratio_plot.plot(years,r_minimum, color='#2222CC', linestyle='-', linewidth=1)
+    ratio_plot.plot(years,r_maximum, color='#2222CC', linestyle='-', linewidth=1)
+    ratio_plot.fill_between(years,r_minimum,r_maximum,color='#EEEEFF')
 
     # labels and stuff
     ratio_plot.set_ylim(0,1.99)
+    ratio_plot.set_xlabel("NFL Season")
+    ratio_plot.set_ylabel("ratio")
 
-    plt.show()
+    main_plot.set_ylim(0.1,main_plot.get_ylim()[1]*1.2)
+    main_plot.set_ylabel(stat_name)
+    main_plot.set_title(plot_text[1], fontsize=16, fontweight='bold')
+    main_plot.legend(loc='upper left')
+
+    #plt.show()
+    # save figure and close it
+    figure.savefig("plots/{}_{}.pdf".format(player_id,stat_id), bbox_inches='tight')
+    del figure
+    plt.close()

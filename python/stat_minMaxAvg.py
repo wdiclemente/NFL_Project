@@ -1,13 +1,5 @@
 class StatMinMaxAvg:
 
-    #stat_name   = ""
-    #num_entries = 0
-    #total       = 0
-    #min_value   = 9999
-    #max_value   = -9999
-    #average     = 0.
-    #values      = [] # I may get rid of this for memory reasons if it's never used
-
     def __init__(self, name):
         self.stat_name = name
         self.num_entries = 0
@@ -73,3 +65,31 @@ class StatMinMaxAvg:
         out += "max_value\t= {}\n"  .format(self.max_value)
         out += "average\t\t= {}\n"  .format(self.average)
         return out
+
+# class specifically for properly calculating the league average completion percent
+#  it's not the average of the comp%, but rather the sum(comp)/sum(att) for all qualifying players
+class CompMinMaxAvg(StatMinMaxAvg):
+
+    # should only need to override the add_entry method
+    def add_entry(self,value,att,comp):
+        self.values.append([att,comp])
+        self.num_entries += 1
+        self.total += value # this becomes meaningless. lol.
+        
+        # update calculated values
+        if value < self.min_value:
+            self.min_value = value
+        if value > self.max_value:
+            self.max_value = value
+
+        # get total attempts, completions
+        sum_att  = 0
+        sum_comp = 0
+        for val in self.values:
+            sum_att  += val[0]
+            sum_comp += val[1]
+
+        if not sum_att == 0: # this should never happen, but you never know
+            self.average = float(sum_comp)/sum_att
+        else:
+            self.average = 0.

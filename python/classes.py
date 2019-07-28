@@ -85,6 +85,7 @@ class Play(object):
         stat = stat.lower()
         if not stat in self.lookup:
             print "Requested statistic '{}' not available!  Returning -1. . .".format(stat)
+            return -1
         else:
             return self.data[self.lookup[stat]]
 
@@ -104,6 +105,24 @@ class Play(object):
 
 class Player(object):
     
+    lookup = {'num_seasons'     :0,
+              'seasons'         :1,
+              'pass_attempt'    :2,
+              'pass_complete'   :3,
+              'pass_comp_pct'   :4,
+              'pass_total_yards':5,
+              'pass_throw_yards':6,
+              'pass_td'         :7,
+              'pass_int'        :8,
+              'pass_sack'       :9,
+              'pass_sack_yards' :10,
+              'pass_defensed'   :11,
+              'rec_reception'   :12,
+              'rec_total_yards' :13,
+              'rec_throw_yards' :14,
+              'rec_yac'         :15,
+              'rec_td'          :16}
+
     def __init__(self):
         # these are the basic variables
         self.p_id   = 0
@@ -116,6 +135,7 @@ class Player(object):
         self.seasons          = []
         self.pass_attempt     = [] 
         self.pass_complete    = [] 
+        self.pass_comp_pct    = []
         self.pass_total_yards = []
         self.pass_throw_yards = []
         self.pass_td          = [] 
@@ -134,6 +154,12 @@ class Player(object):
         self.p_id   = player_id
         self.p_name = player_name
         self.p_pos  = player_pos
+
+    def get_player_name(self):
+        return self.p_name
+
+    def get_player_id(self):
+        return self.p_id
 
     def get_player_info(self):
         out = "{} -- {} ({})".format(self.p_id,self.p_name,self.p_pos)
@@ -159,13 +185,13 @@ class Player(object):
         else:
             return []
 
-    # calculate yearly totals for stats
-    def calculate(self):
+    def prepare_calculate(self):
         # if stats have already been calculated, clear them
         if self.calculated:
             self.seasons          = []
             self.pass_attempt     = [] 
             self.pass_complete    = [] 
+            self.pass_comp_pct    = []
             self.pass_total_yards = []
             self.pass_throw_yards = []
             self.pass_td          = [] 
@@ -182,6 +208,7 @@ class Player(object):
         for y in range(self.num_seasons):
             self.pass_attempt     .append(0) 
             self.pass_complete    .append(0) 
+            self.pass_comp_pct    .append(0)
             self.pass_total_yards .append(0)
             self.pass_throw_yards .append(0)
             self.pass_td          .append(0) 
@@ -195,6 +222,9 @@ class Player(object):
             self.rec_yac          .append(0)
             self.rec_td           .append(0)
 
+    # calculate yearly totals for stats
+    def calculate(self):
+        self.prepare_calculate()
         y = 0
         for year in sorted(self.stats):
             self.seasons.append(year)
@@ -218,35 +248,142 @@ class Player(object):
                         self.rec_throw_yards[y]  += play.get_stat('rec_throw_yards')
                     self.rec_yac[y]          += play.get_stat('rec_yac')
                     self.rec_td[y]           += play.get_stat('pass_td')
+            # calculate completion percent
+            if self.pass_attempt[y] == 0:
+                self.pass_comp_pct[y] = 0.0
+            else:
+                self.pass_comp_pct[y] = self.pass_complete[y]/float(self.pass_attempt[y])
             y += 1
         
         self.calculated = True
 
-    def get_calculated_stats(self):
-        if self.calculated:
-            return [self.num_seasons,
-                    self.seasons,
-                    self.pass_attempt,
-                    self.pass_complete,
-                    self.pass_total_yards,
-                    self.pass_throw_yards,
-                    self.pass_td,
-                    self.pass_int,
-                    self.pass_sack,
-                    self.pass_sack_yards,
-                    self.pass_defensed,
-                    self.rec_reception,
-                    self.rec_total_yards,
-                    self.rec_throw_yards,
-                    self.rec_yac,
-                    self.rec_td]
-        else:
+    def get_all_calculated_stats(self):
+        if not self.calculated:
+            self.calculate()
+
+        return [self.num_seasons,
+                self.seasons,
+                self.pass_attempt,
+                self.pass_complete,
+                self.pass_comp_pct,
+                self.pass_total_yards,
+                self.pass_throw_yards,
+                self.pass_td,
+                self.pass_int,
+                self.pass_sack,
+                self.pass_sack_yards,
+                self.pass_defensed,
+                self.rec_reception,
+                self.rec_total_yards,
+                self.rec_throw_yards,
+                self.rec_yac,
+                self.rec_td]
+
+    def get_calculated_stat(self, stat):
+        if not stat in self.lookup:
+            print "Requested statistic '{}' not available!  Returning empty list. . .".format(stat)
             return []
+        else:
+            return self.get_all_calculated_stats()[self.lookup[stat]]
+
+#---------------------------------------------------------------------------------------------------------
+
+# this collects the yearly passer stats for all players who threw to a given player
+#   ( ideally this would be broken up by game, but not yet )
+class YearlyPasser(object):
+    
+    lookup = {'num_seasons'     :0,
+              'seasons'         :1,
+              'pass_attempt'    :2,
+              'pass_complete'   :3,
+              'pass_comp_pct'   :4,
+              'pass_total_yards':5,
+              'pass_throw_yards':6,
+              'pass_td'         :7,
+              'pass_int'        :8,
+              'pass_sack'       :9,
+              'pass_sack_yards' :10,
+              'pass_defensed'   :11}
+
+    def __init__(self, seasons):
+        self.calculated       = False
+        self.num_seasons      = len(seasons)
+        self.seasons          = sorted(seasons)
+        self.pass_attempt     = [0]*self.num_seasons
+        self.pass_complete    = [0]*self.num_seasons
+        self.pass_comp_pct    = [0]*self.num_seasons
+        self.pass_total_yards = [0]*self.num_seasons
+        self.pass_throw_yards = [0]*self.num_seasons
+        self.pass_td          = [0]*self.num_seasons
+        self.pass_int         = [0]*self.num_seasons
+        self.pass_sack        = [0]*self.num_seasons
+        self.pass_sack_yards  = [0]*self.num_seasons
+        self.pass_defensed    = [0]*self.num_seasons
+
+        #print "Initialized YearlyPasser with {} seasons: {}".format(self.num_seasons,self.seasons)
+
+    def add_passer(self, passer, season):
+        # p_y -> index in player object
+        # y   -> index in this object (may not be the same)
+        p_y = passer.seasons.index(season)
+        y   = self.seasons.index(season)
+        self.pass_attempt[y]     += passer.pass_attempt[p_y]
+        self.pass_complete[y]    += passer.pass_complete[p_y]
+        self.pass_total_yards[y] += passer.pass_total_yards[p_y]
+        self.pass_throw_yards[y] += passer.pass_throw_yards[p_y]
+        self.pass_td[y]          += passer.pass_td[p_y]
+        self.pass_int[y]         += passer.pass_int[p_y]
+        self.pass_sack[y]        += passer.pass_sack[p_y]
+        self.pass_sack_yards[y]  += passer.pass_sack_yards[p_y]
+        self.pass_defensed[y]    += passer.pass_defensed[p_y]
+        # calculate completion percent
+        if self.pass_attempt[y] == 0:
+            self.pass_comp_pct[y] = 0.0 
+        else:
+            self.pass_comp_pct[y] = self.pass_complete[y]/float(self.pass_attempt[y])
+        
+    def get_all_calculated_stats(self):
+        return [self.num_seasons,
+                self.seasons,
+                self.pass_attempt,
+                self.pass_complete,
+                self.pass_comp_pct,
+                self.pass_total_yards,
+                self.pass_throw_yards,
+                self.pass_td,
+                self.pass_int,
+                self.pass_sack,
+                self.pass_sack_yards,
+                self.pass_defensed]
+    
+    def get_calculated_stat(self, stat):
+        if not stat in self.lookup:
+            print "Requested statistic '{}' not available!  Returning empty list. . .".format(stat)
+            return []
+        else:
+            return self.get_all_calculated_stats()[self.lookup[stat]]
 
 #---------------------------------------------------------------------------------------------------------
 from python.stat_minMaxAvg import *
 class LeagueAverages(object):
     
+    lookup = {'seasons'         :0,
+              'pass_attempt'    :1,
+              'pass_complete'   :2,
+              'pass_comp_pct'   :3,
+              'pass_total_yards':4,
+              'pass_throw_yards':5,
+              'pass_td'         :6,
+              'pass_int'        :7,
+              'pass_sack'       :8,
+              'pass_sack_yards' :9,
+              'pass_defensed'   :10,
+              'rec_reception'   :11,
+              'rec_total_yards' :12,
+              'rec_throw_yards' :13,
+              'rec_yac'         :14,
+              'rec_td'          :15}
+
     def __init__(self, years, min_rec, min_pass):
         # minimum numbers of receptions/passes to qualify for averages
         self.min_rec  = min_rec
@@ -255,6 +392,7 @@ class LeagueAverages(object):
         self.seasons = sorted(years)
         self.pass_attempt     = [StatMinMaxAvg('Pass attempts')         for s in self.seasons]
         self.pass_complete    = [StatMinMaxAvg('Pass completions')      for s in self.seasons]
+        self.pass_comp_pct    = [CompMinMaxAvg('Pass completion pct')   for s in self.seasons]
         self.pass_total_yards = [StatMinMaxAvg('Pass total yards')      for s in self.seasons]
         self.pass_throw_yards = [StatMinMaxAvg('Pass throw yards')      for s in self.seasons]
         self.pass_td          = [StatMinMaxAvg('Pass TDs')              for s in self.seasons]
@@ -289,9 +427,37 @@ class LeagueAverages(object):
                 self.pass_sack[y]       .add_entry(player.pass_sack[p_y])
                 self.pass_sack_yards[y] .add_entry(player.pass_sack_yards[p_y])
                 self.pass_defensed[y]   .add_entry(player.pass_defensed[p_y])
+                self.pass_comp_pct[y]   .add_entry(player.pass_comp_pct[p_y],
+                                                   player.pass_attempt[p_y],
+                                                   player.pass_complete[p_y])
             if player.rec_reception[p_y] >= self.min_rec:
                 self.rec_reception[y]   .add_entry(player.rec_reception[p_y])
                 self.rec_total_yards[y] .add_entry(player.rec_total_yards[p_y])
                 self.rec_throw_yards[y] .add_entry(player.rec_throw_yards[p_y])
                 self.rec_yac[y]         .add_entry(player.rec_yac[p_y])
                 self.rec_td[y]          .add_entry(player.rec_td[p_y])
+
+    def get_all_calculated_stats(self):
+        return [self.seasons,
+                self.pass_attempt,
+                self.pass_complete,
+                self.pass_comp_pct,
+                self.pass_total_yards,
+                self.pass_throw_yards,
+                self.pass_td,
+                self.pass_int,
+                self.pass_sack,
+                self.pass_sack_yards,
+                self.pass_defensed,
+                self.rec_reception,
+                self.rec_total_yards,
+                self.rec_throw_yards,
+                self.rec_yac,
+                self.rec_td]
+
+    def get_calculated_stat(self, stat):
+        if not stat in self.lookup:
+            print "Requested statistic '{}' not available!  Returning empty list. . .".format(stat)
+            return []
+        else:
+            return self.get_all_calculated_stats()[self.lookup[stat]]
