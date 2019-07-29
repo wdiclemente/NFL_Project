@@ -121,7 +121,9 @@ class Player(object):
               'rec_total_yards' :13,
               'rec_throw_yards' :14,
               'rec_yac'         :15,
-              'rec_td'          :16}
+              'rec_td'          :16,
+              'metric_rec'      :17,
+              'metric_pass'     :18}
 
     def __init__(self):
         # these are the basic variables
@@ -148,6 +150,8 @@ class Player(object):
         self.rec_throw_yards  = [] 
         self.rec_yac          = [] 
         self.rec_td           = []
+        self.metric_rec       = []
+        self.metric_pass      = []
 
     # set player info
     def set_player(self, player_id, player_name, player_pos):
@@ -160,6 +164,9 @@ class Player(object):
 
     def get_player_id(self):
         return self.p_id
+
+    def get_player_pos(self):
+        return self.p_pos
 
     def get_player_info(self):
         out = "{} -- {} ({})".format(self.p_id,self.p_name,self.p_pos)
@@ -277,7 +284,9 @@ class Player(object):
                 self.rec_total_yards,
                 self.rec_throw_yards,
                 self.rec_yac,
-                self.rec_td]
+                self.rec_td,
+                self.metric_rec,
+                self.metric_pass]
 
     def get_calculated_stat(self, stat):
         if not stat in self.lookup:
@@ -285,6 +294,13 @@ class Player(object):
             return []
         else:
             return self.get_all_calculated_stats()[self.lookup[stat]]
+
+    def add_pass_metric(self, pass_metric):
+        self.metric_pass = pass_metric
+
+    def add_rec_metric(self, rec_metric):
+        self.metric_rec = rec_metric
+        
 
 #---------------------------------------------------------------------------------------------------------
 
@@ -303,7 +319,8 @@ class YearlyPasser(object):
               'pass_int'        :8,
               'pass_sack'       :9,
               'pass_sack_yards' :10,
-              'pass_defensed'   :11}
+              'pass_defensed'   :11,
+              'metric_pass'     :12}
 
     def __init__(self, seasons):
         self.calculated       = False
@@ -319,6 +336,7 @@ class YearlyPasser(object):
         self.pass_sack        = [0]*self.num_seasons
         self.pass_sack_yards  = [0]*self.num_seasons
         self.pass_defensed    = [0]*self.num_seasons
+        self.metric_pass      = [0]*self.num_seasons
 
         #print "Initialized YearlyPasser with {} seasons: {}".format(self.num_seasons,self.seasons)
 
@@ -354,7 +372,8 @@ class YearlyPasser(object):
                 self.pass_int,
                 self.pass_sack,
                 self.pass_sack_yards,
-                self.pass_defensed]
+                self.pass_defensed,
+                self.metric_pass]
     
     def get_calculated_stat(self, stat):
         if not stat in self.lookup:
@@ -362,6 +381,9 @@ class YearlyPasser(object):
             return []
         else:
             return self.get_all_calculated_stats()[self.lookup[stat]]
+
+    def add_pass_metric(self, pass_metric):
+        self.metric_pass = pass_metric
 
 #---------------------------------------------------------------------------------------------------------
 from python.stat_minMaxAvg import *
@@ -461,3 +483,172 @@ class LeagueAverages(object):
             return []
         else:
             return self.get_all_calculated_stats()[self.lookup[stat]]
+
+#---------------------------------------------------------------------------------------------------------
+
+class LeagueAveragesMetric(object):
+    
+    lookup = {'seasons'     :0,
+              'metric_pass' :1,
+              'metric_rec'  :2}
+
+    def __init__(self, years, min_rec, min_pass):
+        # minimum numbers of receptions/passes to qualify for averages
+        self.min_rec  = min_rec
+        self.min_pass = min_pass
+
+        self.seasons = sorted(years)
+        self.metric_pass = [StatMinMaxAvg('Receiving Metric') for s in self.seasons]
+        self.metric_rec  = [StatMinMaxAvg('Passing Metric')   for s in self.seasons]
+
+    def add_player(self,player):
+        # check if player stats have been calculated (they should be, but just in case)
+        if not player.calculated:
+            player.calculate()
+
+        for p_y,year in enumerate(player.seasons):
+            # p_y -> index in player object
+            # y   -> index in this object (may not be the same)
+            y = self.seasons.index(year)
+
+            # check that minimum requirements are met
+            if player.pass_attempt[p_y] >= self.min_pass:
+                self.metric_pass[y].add_entry(player.metric_pass[p_y])
+
+            if player.rec_reception[p_y] >= self.min_rec:
+                self.metric_rec[y]   .add_entry(player.metric_rec[p_y])
+
+    def get_all_calculated_stats(self):
+        return [self.seasons,
+                self.metric_pass,
+                self.metric_rec]
+
+    def get_calculated_stat(self, stat):
+        if not stat in self.lookup:
+            print "Requested statistic '{}' not available!  Returning empty list. . .".format(stat)
+            return []
+        else:
+            return self.get_all_calculated_stats()[self.lookup[stat]]
+
+#---------------------------------------------------------------------------------------------------------
+
+class MetricCalculator(object):
+    
+    def __init__(self, rec_weights, pass_weights):
+        # weights for recievers
+        if not len(rec_weights) == 4:
+            print "MetricCalculator -- Error: expected 4 receiving stat weights, got {}! Initializing weights to 1.".format(len(rec_weights))
+            self.weight_rec_reception   = 1.
+            self.weight_rec_total_yards = 1.
+            self.weight_rec_yac         = 1.
+            self.weight_rec_td          = 1.
+        else:
+            self.weight_rec_reception   = rec_weights[0]
+            self.weight_rec_total_yards = rec_weights[1]
+            self.weight_rec_yac         = rec_weights[2]
+            self.weight_rec_td          = rec_weights[3]
+
+        # weights for passers
+        if not len(pass_weights) == 7:
+            print "MetricCalculator -- Error: expected 7 passing stat weights, got {}! Initializing weights to 1.".format(len(pass_weights))
+            self.weight_pass_complete    = 1.
+            self.weight_pass_attempt     = 1.
+            self.weight_pass_comp_pct    = 1.
+            self.weight_pass_total_yards = 1.
+            self.weight_pass_throw_yards = 1.
+            self.weight_pass_td          = 1.
+            self.weight_pass_int         = 1.
+        else:
+            self.weight_pass_complete    = pass_weights[0]
+            self.weight_pass_attempt     = pass_weights[1]
+            self.weight_pass_comp_pct    = pass_weights[2]
+            self.weight_pass_total_yards = pass_weights[3]
+            self.weight_pass_throw_yards = pass_weights[4]
+            self.weight_pass_td          = pass_weights[5]
+            self.weight_pass_int         = pass_weights[6]
+
+    # this is the metric calculation for a single stat. they will be a weighted sum
+    # based off of the Z-score of each stat (number of standard deviations from the mean)
+    # z_i = (x_i-mu)/sigma
+    def stat_ratio(self, stat, stat_mean, stat_stdev):
+        if stat_stdev == 0:
+            return 0.0
+        else:
+            #return (stat_num-stat_den)/float(stat_den)
+            return (stat-stat_mean)/stat_stdev
+
+    def calculate_passer(self, passer, league):
+        metric = []
+        for p_y,year in enumerate(passer.seasons):
+            # p_y -> index in player object
+            # l_y -> index in league (may not be the same)
+            l_y = league.seasons.index(year)
+            
+            pass_complete = self.stat_ratio(passer.get_calculated_stat('pass_complete')[p_y],
+                                            league.get_calculated_stat('pass_complete')[l_y].get_average(),
+                                            league.get_calculated_stat('pass_complete')[l_y].get_stdev())
+            val =  self.weight_pass_complete*pass_complete
+
+            pass_attempt = self.stat_ratio(passer.get_calculated_stat('pass_attempt')[p_y],
+                                           league.get_calculated_stat('pass_attempt')[l_y].get_average(),
+                                           league.get_calculated_stat('pass_attempt')[l_y].get_stdev())
+            val += self.weight_pass_attempt*pass_attempt
+
+            pass_comp_pct = self.stat_ratio(passer.get_calculated_stat('pass_comp_pct')[p_y],
+                                            league.get_calculated_stat('pass_comp_pct')[l_y].get_average(),
+                                            league.get_calculated_stat('pass_comp_pct')[l_y].get_stdev())
+            val += self.weight_pass_total_yards*pass_comp_pct
+
+            pass_total_yards = self.stat_ratio(passer.get_calculated_stat('pass_total_yards')[p_y],
+                                               league.get_calculated_stat('pass_total_yards')[l_y].get_average(),
+                                               league.get_calculated_stat('pass_total_yards')[l_y].get_stdev())
+            val += self.weight_pass_total_yards*pass_total_yards
+
+            pass_throw_yards = self.stat_ratio(passer.get_calculated_stat('pass_throw_yards')[p_y],
+                                               league.get_calculated_stat('pass_throw_yards')[l_y].get_average(),
+                                               league.get_calculated_stat('pass_throw_yards')[l_y].get_stdev())
+            val += self.weight_pass_throw_yards*pass_throw_yards
+            
+            pass_td = self.stat_ratio(passer.get_calculated_stat('pass_td')[p_y],
+                                      league.get_calculated_stat('pass_td')[l_y].get_average(),
+                                      league.get_calculated_stat('pass_td')[l_y].get_stdev())
+            val += self.weight_pass_td*pass_td
+
+            pass_int = self.stat_ratio(passer.get_calculated_stat('pass_int')[p_y],
+                                       league.get_calculated_stat('pass_int')[l_y].get_average(),
+                                       league.get_calculated_stat('pass_int')[l_y].get_stdev())
+            val += self.weight_pass_int*pass_int
+
+            metric.append(val)
+        return metric
+
+    def calculate_receiver(self, receiver, league):
+        metric = []
+        for r_y,year in enumerate(receiver.seasons):
+            # r_y -> index in player object
+            # l_y -> index in league (may not be the same)
+            l_y = league.seasons.index(year)
+            
+            rec_reception = self.stat_ratio(receiver.get_calculated_stat('rec_reception')[r_y],
+                                             league.get_calculated_stat('rec_reception')[l_y].get_average(),
+                                             league.get_calculated_stat('rec_reception')[l_y].get_stdev())
+            val =  self.weight_rec_reception*rec_reception
+
+            rec_total_yards = self.stat_ratio(receiver.get_calculated_stat('rec_total_yards')[r_y],
+                                              league.get_calculated_stat('rec_total_yards')[l_y].get_average(),
+                                              league.get_calculated_stat('rec_total_yards')[l_y].get_stdev())
+            val += self.weight_rec_total_yards*rec_total_yards
+
+            rec_yac = self.stat_ratio(receiver.get_calculated_stat('rec_yac')[r_y],
+                                      league.get_calculated_stat('rec_yac')[l_y].get_average(),
+                                      league.get_calculated_stat('rec_yac')[l_y].get_stdev())
+            val += self.weight_rec_yac*rec_yac
+
+            rec_td = self.stat_ratio(receiver.get_calculated_stat('rec_td')[r_y],
+                                     league.get_calculated_stat('rec_td')[l_y].get_average(),
+                                     league.get_calculated_stat('rec_td')[l_y].get_stdev())
+            val += self.weight_rec_td*rec_td
+
+            metric.append(val)
+        return metric
+        pass

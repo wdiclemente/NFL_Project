@@ -1,3 +1,5 @@
+from math import sqrt
+
 class StatMinMaxAvg:
 
     def __init__(self, name):
@@ -7,6 +9,7 @@ class StatMinMaxAvg:
         self.min_value   = 9999
         self.max_value   = -9999
         self.average     = 0.
+        self.stdev       = 0.
         self.values      = []
     # allow overwrite of name
     def set_stat_name(self,name):
@@ -14,7 +17,7 @@ class StatMinMaxAvg:
     
     # add a new entry to the stat tracker
     def add_entry(self,value):
-        #self.values.append(value)
+        self.values.append(value)
         self.num_entries += 1
         self.total += value
         
@@ -28,6 +31,15 @@ class StatMinMaxAvg:
             self.average = float(self.total)/self.num_entries
         else:
             self.average = 0.
+
+        # get standard deviation
+        if not self.num_entries == 0:
+            xi_mu = 0.
+            for xi in self.values:
+                xi_mu += (xi - self.average)**2
+            self.stdev = sqrt(xi_mu/self.num_entries)
+        else:
+            self.stdev = 0.
         
     # get values
     def get_stat_name(self):
@@ -42,6 +54,8 @@ class StatMinMaxAvg:
         return self.max_value
     def get_average(self):
         return self.average
+    def get_stdev(self):
+        return self.stdev
 
     # fancy print
     def to_string(self):
@@ -93,3 +107,12 @@ class CompMinMaxAvg(StatMinMaxAvg):
             self.average = float(sum_comp)/sum_att
         else:
             self.average = 0.
+
+        # get standard deviation
+        if not self.num_entries == 0:
+            xi_mu = 0.
+            for xi in self.values:
+                xi_mu += (xi[1]/xi[0] - self.average)**2
+            self.stdev = sqrt(xi_mu/self.num_entries)
+        else:
+            self.stdev = 0.

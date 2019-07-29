@@ -103,10 +103,41 @@ if __name__ == '__main__':
     print "Finished calculating league averages in {:0.2f} seconds.".format(ave_end-ave_start)
 
     #---------------------------
+    # CALCULATE METRICS FOR ALL PLAYERS AND LEAGUE AVERAGE
+    #---------------------------
+    metric_start = time.time()
+
+    rec_weights = [config.getfloat('Metric', 'weight_rec_reception'),
+                   config.getfloat('Metric', 'weight_rec_total_yards'),
+                   config.getfloat('Metric', 'weight_rec_yac'),
+                   config.getfloat('Metric', 'weight_rec_td')]
+    pass_weights = [config.getfloat('Metric', 'weight_pass_complete'),
+                    config.getfloat('Metric', 'weight_pass_attempt'),
+                    config.getfloat('Metric', 'weight_pass_comp_pct'),
+                    config.getfloat('Metric', 'weight_pass_total_yards'),
+                    config.getfloat('Metric', 'weight_pass_throw_yards'),
+                    config.getfloat('Metric', 'weight_pass_td'),
+                    config.getfloat('Metric', 'weight_pass_int')]
+    met_calc = MetricCalculator(rec_weights,pass_weights)
+
+    # this will store the leaguemin/max/average of the metrics
+    NFL_Metric = LeagueAveragesMetric(range(2004,2019),min_rec,min_pass)
+
+    # calculate player metrics and insert into league
+    for p_id in players:
+        players[p_id].add_pass_metric(met_calc.calculate_passer  (players[p_id],NFL))
+        players[p_id].add_rec_metric (met_calc.calculate_receiver(players[p_id],NFL))
+        NFL_Metric.add_player(players[p_id])
+
+    metric_end = time.time()
+    print "Finished calculating metric for all players in {:0.2f} sec.".format(metric_end-metric_start)
+
+    #---------------------------
     # MAKE PLOTS FOR REQUESTED PLAYERS
     #---------------------------
 
     for poi in players_of_interest:
+        plot_start = time.time()
         # gather stats for this PoI
         this_player = players[poi]
         this_passer = YearlyPasser(this_player.seasons)
@@ -154,3 +185,16 @@ if __name__ == '__main__':
                                  NFL        .get_calculated_stat(pass_stat),
                                  [this_player.get_player_name(),
                                   "{}'s passers vs NFL average (min {} pass)".format(this_player.get_player_name(),min_pass)])
+        
+        metric_passer   = met_calc.calculate_passer(this_passer,NFL)
+        make_metric_plot(this_player.get_player_id(),
+                         this_player.seasons,
+                         this_player.get_calculated_stat('metric_rec'),
+                         metric_passer,
+                         NFL_Metric.get_calculated_stat('metric_rec'),
+                         NFL_Metric.get_calculated_stat('metric_pass'),
+                         [this_player.get_player_name(),
+                          "{} & associated passer (min {} rec/{} pass)".format(this_player.get_player_name(),min_rec,min_pass)])
+
+        plot_end = time.time()
+        print "Done in {:0.2f} sec.".format(plot_end-plot_start)
