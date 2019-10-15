@@ -14,7 +14,7 @@ if __name__ == '__main__':
     #---------------------------
     
     config = configparser.ConfigParser()
-    config.readfp(open(r'config/config.cfg'))
+    config.read_file(open('config/config.cfg'))
 
     # paths
     project_dir = config.get('Paths', 'project_dir')
