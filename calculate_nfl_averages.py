@@ -5,7 +5,7 @@ if __name__ == '__main__':
     from python.utils import *
     # python includes
     import time
-    import ConfigParser
+    import configparser
     import numpy as np
     from matplotlib import pyplot as plt
 
@@ -13,7 +13,7 @@ if __name__ == '__main__':
     # SET UP STUFF
     #---------------------------
     
-    config = ConfigParser.ConfigParser()
+    config = configparser.ConfigParser()
     config.readfp(open(r'config/config.cfg'))
 
     # paths
@@ -41,7 +41,7 @@ if __name__ == '__main__':
         # loop over remaining lines
         while line:
             if count % 25000 == 0:
-                print "Processing play #{}".format(count)
+                print("Processing play #{}".format(count))
 
             play = Play(count,line)
             plays.append(play)
@@ -75,7 +75,7 @@ if __name__ == '__main__':
             line = input_data.readline()
             count += 1
     read_data_end = time.time()
-    print "Finished reading {} plays in {:0.2f} seconds.".format(count,read_data_end-read_data_start)
+    print("Finished reading {} plays in {:0.2f} seconds.".format(count,read_data_end-read_data_start))
 
     #---------------------------
     # PROCESS PLAYER STATS
@@ -84,12 +84,12 @@ if __name__ == '__main__':
     count = 1
     for p_id in players:
         if count % 1000 == 0:
-            print "Calculating stats for player #{}".format(count)
+            print("Calculating stats for player #{}".format(count))
         count += 1
         
         players[p_id].calculate()
     calculate_end = time.time()
-    print "Finished calculating stats for {} players in {:0.2f} seconds.".format(count,calculate_end-calculate_start)
+    print("Finished calculating stats for {} players in {:0.2f} seconds.".format(count,calculate_end-calculate_start))
 
     #---------------------------
     # CALCULATE LEAGUE AVERAGES
@@ -100,7 +100,7 @@ if __name__ == '__main__':
     for p_id in players:
         NFL.add_player(players[p_id])
     ave_end = time.time()
-    print "Finished calculating league averages in {:0.2f} seconds.".format(ave_end-ave_start)
+    print("Finished calculating league averages in {:0.2f} seconds.".format(ave_end-ave_start))
 
     #---------------------------
     # CALCULATE METRICS FOR ALL PLAYERS AND LEAGUE AVERAGE
@@ -130,7 +130,7 @@ if __name__ == '__main__':
         NFL_Metric.add_player(players[p_id])
 
     metric_end = time.time()
-    print "Finished calculating metric for all players in {:0.2f} sec.".format(metric_end-metric_start)
+    print("Finished calculating metric for all players in {:0.2f} sec.".format(metric_end-metric_start))
 
     #---------------------------
     # MAKE PLOTS FOR REQUESTED PLAYERS
@@ -141,7 +141,7 @@ if __name__ == '__main__':
         # gather stats for this PoI
         this_player = players[poi]
         this_passer = YearlyPasser(this_player.seasons)
-        print "Making plots for player {}.".format(this_player.get_player_info())
+        print("Making plots for player {}.".format(this_player.get_player_info()))
 
         for year in this_player.seasons:
             # get all passers who threw to this PoI in this season
@@ -197,4 +197,4 @@ if __name__ == '__main__':
                           "{} & associated passer (min {} rec/{} pass)".format(this_player.get_player_name(),min_rec,min_pass)])
 
         plot_end = time.time()
-        print "Done in {:0.2f} sec.".format(plot_end-plot_start)
+        print("Done in {:0.2f} sec.".format(plot_end-plot_start))

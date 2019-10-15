@@ -84,7 +84,7 @@ class Play(object):
     def get_stat(self,stat):
         stat = stat.lower()
         if not stat in self.lookup:
-            print "Requested statistic '{}' not available!  Returning -1. . .".format(stat)
+            print("Requested statistic '{}' not available!  Returning -1. . .".format(stat))
             return -1
         else:
             return self.data[self.lookup[stat]]
@@ -290,7 +290,7 @@ class Player(object):
 
     def get_calculated_stat(self, stat):
         if not stat in self.lookup:
-            print "Requested statistic '{}' not available!  Returning empty list. . .".format(stat)
+            print("Requested statistic '{}' not available!  Returning empty list. . .".format(stat))
             return []
         else:
             return self.get_all_calculated_stats()[self.lookup[stat]]
@@ -338,7 +338,7 @@ class YearlyPasser(object):
         self.pass_defensed    = [0]*self.num_seasons
         self.metric_pass      = [0]*self.num_seasons
 
-        #print "Initialized YearlyPasser with {} seasons: {}".format(self.num_seasons,self.seasons)
+        #print("Initialized YearlyPasser with {} seasons: {}".format(self.num_seasons,self.seasons))
 
     def add_passer(self, passer, season):
         # p_y -> index in player object
@@ -377,7 +377,7 @@ class YearlyPasser(object):
     
     def get_calculated_stat(self, stat):
         if not stat in self.lookup:
-            print "Requested statistic '{}' not available!  Returning empty list. . .".format(stat)
+            print("Requested statistic '{}' not available!  Returning empty list. . .".format(stat))
             return []
         else:
             return self.get_all_calculated_stats()[self.lookup[stat]]
@@ -479,7 +479,7 @@ class LeagueAverages(object):
 
     def get_calculated_stat(self, stat):
         if not stat in self.lookup:
-            print "Requested statistic '{}' not available!  Returning empty list. . .".format(stat)
+            print("Requested statistic '{}' not available!  Returning empty list. . .".format(stat))
             return []
         else:
             return self.get_all_calculated_stats()[self.lookup[stat]]
@@ -525,7 +525,7 @@ class LeagueAveragesMetric(object):
 
     def get_calculated_stat(self, stat):
         if not stat in self.lookup:
-            print "Requested statistic '{}' not available!  Returning empty list. . .".format(stat)
+            print("Requested statistic '{}' not available!  Returning empty list. . .".format(stat))
             return []
         else:
             return self.get_all_calculated_stats()[self.lookup[stat]]
@@ -537,7 +537,7 @@ class MetricCalculator(object):
     def __init__(self, rec_weights, pass_weights):
         # weights for recievers
         if not len(rec_weights) == 4:
-            print "MetricCalculator -- Error: expected 4 receiving stat weights, got {}! Initializing weights to 1.".format(len(rec_weights))
+            print("MetricCalculator -- Error: expected 4 receiving stat weights, got {}! Initializing weights to 1.".format(len(rec_weights)))
             self.weight_rec_reception   = 1.
             self.weight_rec_total_yards = 1.
             self.weight_rec_yac         = 1.
@@ -550,7 +550,7 @@ class MetricCalculator(object):
 
         # weights for passers
         if not len(pass_weights) == 7:
-            print "MetricCalculator -- Error: expected 7 passing stat weights, got {}! Initializing weights to 1.".format(len(pass_weights))
+            print("MetricCalculator -- Error: expected 7 passing stat weights, got {}! Initializing weights to 1.".format(len(pass_weights)))
             self.weight_pass_complete    = 1.
             self.weight_pass_attempt     = 1.
             self.weight_pass_comp_pct    = 1.
