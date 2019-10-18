@@ -113,7 +113,7 @@ def make_plot_with_ratio(player_id, stat_id, player_years, player_stats, season_
 
     # get ratio stats
     r_new_player_stats = divide_lists(new_player_stats,average)
-    r_average = divide_lists(average,  average)
+    r_average = divide_lists(average,average)
     r_minimum = divide_lists(minimum,average)
     r_maximum = divide_lists(maximum,average)        
 

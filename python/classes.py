@@ -570,7 +570,7 @@ class MetricCalculator(object):
     # this is the metric calculation for a single stat. they will be a weighted sum
     # based off of the Z-score of each stat (number of standard deviations from the mean)
     # z_i = (x_i-mu)/sigma
-    def stat_ratio(self, stat, stat_mean, stat_stdev):
+    def z_score(self, stat, stat_mean, stat_stdev):
         if stat_stdev == 0:
             return 0.0
         else:
@@ -584,37 +584,37 @@ class MetricCalculator(object):
             # l_y -> index in league (may not be the same)
             l_y = league.seasons.index(year)
             
-            pass_complete = self.stat_ratio(passer.get_calculated_stat('pass_complete')[p_y],
+            pass_complete = self.z_score(passer.get_calculated_stat('pass_complete')[p_y],
                                             league.get_calculated_stat('pass_complete')[l_y].get_average(),
                                             league.get_calculated_stat('pass_complete')[l_y].get_stdev())
             val =  self.weight_pass_complete*pass_complete
 
-            pass_attempt = self.stat_ratio(passer.get_calculated_stat('pass_attempt')[p_y],
+            pass_attempt = self.z_score(passer.get_calculated_stat('pass_attempt')[p_y],
                                            league.get_calculated_stat('pass_attempt')[l_y].get_average(),
                                            league.get_calculated_stat('pass_attempt')[l_y].get_stdev())
             val += self.weight_pass_attempt*pass_attempt
 
-            pass_comp_pct = self.stat_ratio(passer.get_calculated_stat('pass_comp_pct')[p_y],
+            pass_comp_pct = self.z_score(passer.get_calculated_stat('pass_comp_pct')[p_y],
                                             league.get_calculated_stat('pass_comp_pct')[l_y].get_average(),
                                             league.get_calculated_stat('pass_comp_pct')[l_y].get_stdev())
             val += self.weight_pass_total_yards*pass_comp_pct
 
-            pass_total_yards = self.stat_ratio(passer.get_calculated_stat('pass_total_yards')[p_y],
+            pass_total_yards = self.z_score(passer.get_calculated_stat('pass_total_yards')[p_y],
                                                league.get_calculated_stat('pass_total_yards')[l_y].get_average(),
                                                league.get_calculated_stat('pass_total_yards')[l_y].get_stdev())
             val += self.weight_pass_total_yards*pass_total_yards
 
-            pass_throw_yards = self.stat_ratio(passer.get_calculated_stat('pass_throw_yards')[p_y],
+            pass_throw_yards = self.z_score(passer.get_calculated_stat('pass_throw_yards')[p_y],
                                                league.get_calculated_stat('pass_throw_yards')[l_y].get_average(),
                                                league.get_calculated_stat('pass_throw_yards')[l_y].get_stdev())
             val += self.weight_pass_throw_yards*pass_throw_yards
             
-            pass_td = self.stat_ratio(passer.get_calculated_stat('pass_td')[p_y],
+            pass_td = self.z_score(passer.get_calculated_stat('pass_td')[p_y],
                                       league.get_calculated_stat('pass_td')[l_y].get_average(),
                                       league.get_calculated_stat('pass_td')[l_y].get_stdev())
             val += self.weight_pass_td*pass_td
 
-            pass_int = self.stat_ratio(passer.get_calculated_stat('pass_int')[p_y],
+            pass_int = self.z_score(passer.get_calculated_stat('pass_int')[p_y],
                                        league.get_calculated_stat('pass_int')[l_y].get_average(),
                                        league.get_calculated_stat('pass_int')[l_y].get_stdev())
             val += self.weight_pass_int*pass_int
@@ -629,22 +629,22 @@ class MetricCalculator(object):
             # l_y -> index in league (may not be the same)
             l_y = league.seasons.index(year)
             
-            rec_reception = self.stat_ratio(receiver.get_calculated_stat('rec_reception')[r_y],
+            rec_reception = self.z_score(receiver.get_calculated_stat('rec_reception')[r_y],
                                              league.get_calculated_stat('rec_reception')[l_y].get_average(),
                                              league.get_calculated_stat('rec_reception')[l_y].get_stdev())
             val =  self.weight_rec_reception*rec_reception
 
-            rec_total_yards = self.stat_ratio(receiver.get_calculated_stat('rec_total_yards')[r_y],
+            rec_total_yards = self.z_score(receiver.get_calculated_stat('rec_total_yards')[r_y],
                                               league.get_calculated_stat('rec_total_yards')[l_y].get_average(),
                                               league.get_calculated_stat('rec_total_yards')[l_y].get_stdev())
             val += self.weight_rec_total_yards*rec_total_yards
 
-            rec_yac = self.stat_ratio(receiver.get_calculated_stat('rec_yac')[r_y],
+            rec_yac = self.z_score(receiver.get_calculated_stat('rec_yac')[r_y],
                                       league.get_calculated_stat('rec_yac')[l_y].get_average(),
                                       league.get_calculated_stat('rec_yac')[l_y].get_stdev())
             val += self.weight_rec_yac*rec_yac
 
-            rec_td = self.stat_ratio(receiver.get_calculated_stat('rec_td')[r_y],
+            rec_td = self.z_score(receiver.get_calculated_stat('rec_td')[r_y],
                                      league.get_calculated_stat('rec_td')[l_y].get_average(),
                                      league.get_calculated_stat('rec_td')[l_y].get_stdev())
             val += self.weight_rec_td*rec_td
