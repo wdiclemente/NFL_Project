@@ -11,3 +11,5 @@ plot_test.py*
 play_test.py*
 
 plots/*
+
+jupyter/.ipynb_checkpoints
