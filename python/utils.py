@@ -1,4 +1,4 @@
-from pass_play import *
+from python.pass_play import *
 from matplotlib import pyplot as plt
 import numpy as np
 
@@ -10,7 +10,7 @@ def parse_PoI(config):
         try:
             PoI.append(int(pid))
         except ValueError:
-            print "Player ID '{}' from config is not an int! Exiting. . .".format(pid)
+            print("Player ID '{}' from config is not an int! Exiting. . .".format(pid))
             exit()
     return PoI
 
@@ -53,7 +53,7 @@ def make_player_lookup(input_path):
                 output_dict[line[0]] = line[1]
 
             else:
-                print "Warning, ID {} ({}) already in dictionary for player {}! Skipping...".format(line[0],line[1],output_dict[line[0]])
+                print("Warning, ID {} ({}) already in dictionary for player {}! Skipping...".format(line[0],line[1],output_dict[line[0]]))
 
             line = player_id.readline()
 
@@ -113,7 +113,7 @@ def make_plot_with_ratio(player_id, stat_id, player_years, player_stats, season_
 
     # get ratio stats
     r_new_player_stats = divide_lists(new_player_stats,average)
-    r_average = divide_lists(average,  average)
+    r_average = divide_lists(average,average)
     r_minimum = divide_lists(minimum,average)
     r_maximum = divide_lists(maximum,average)        
 
